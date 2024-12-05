@@ -1,0 +1,7 @@
+# Clangd
+compile_commands.json
+.cache/
+
+# Nix 
+/.direnv
+result
