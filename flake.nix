@@ -1,5 +1,5 @@
 {
-  description = "Particle System in Metals in Pure C++23";
+  description = "Mandelbulbs in Metals in Pure C++23";
 
   outputs =
     inputs@{ flake-parts, ... }:
@@ -18,12 +18,19 @@
         let
           llvm = pkgs.llvmPackages_19;
           stdenv = llvm.stdenv;
+          fs = lib.fileset;
         in
         {
-          packages.particles = stdenv.mkDerivation {
-            pname = "particles";
+          packages.mandelbulb = stdenv.mkDerivation {
+            pname = "mandelbulb";
             version = "0.1.0";
-            src = ./src;
+            src = fs.toSource {
+              root = ./.;
+              fileset = fs.unions [
+                ./include
+                ./src
+              ];
+            };
 
             outputs = [
               "out"
@@ -53,35 +60,35 @@
               "-fno-common"
               "-fvisibility=hidden"
               "-Wall"
-              "-Wextra"
-              "-Werror"
-              "-Wpedantic"
               "-Wconversion"
             ];
 
             preBuild = ''
               mkdir -p pcms
-              $CXX  -Wno-reserved-identifier -Wno-reserved-module-identifier \
-                    --precompile -o pcms/std.pcm ${llvm.libcxx}/share/libc++/v1/std.cppm $FLAGS
+              $CXX  -Wno-reserved-identifier -Wno-reserved-module-identifier --precompile \
+                    -o pcms/std.pcm ${llvm.libcxx}/share/libc++/v1/std.cppm $FLAGS
             '';
 
             buildPhase = ''
               runHook preBuild
-              $CXX main.cc -o particles -fprebuilt-module-path=pcms -MJ particles.o.json $FLAGS
+              $CXX src/main.cc src/AppDelegate.cc src/MTKViewDelegate.cc src/Renderer.cc \
+                   -o mandelbulb -fprebuilt-module-path=pcms -Iinclude -lobjc -framework MetalKit \
+                   -framework AppKit -framework Metal -framework QuartzCore -framework Foundation \
+                   -MJ mandelbulb.o.json $FLAGS
             '';
 
             installPhase = ''
-              install -D -t $out/bin particles
+              install -D -t $out/bin mandelbulb
               install -D -t $development/pcms pcms/*
               install -D -t $development/fragments *.o.json
             '';
 
-            meta.mainProgram = "bin/particles";
+            meta.mainProgram = "mandelbulb";
           };
 
           devShells.default = pkgs.mkShell.override { inherit stdenv; } {
-            packages = [ llvm.clang-tools ];
-            inputsFrom = [ config.packages.particles ];
+            packages = [ (pkgs.ccls.override { llvmPackages = llvm; }) ];
+            inputsFrom = [ config.packages.mandelbulb ];
           };
 
           apps.ccdb = {
@@ -92,7 +99,7 @@
                 runtimeInputs = [ pkgs.gnused ];
                 text =
                   let
-                    proj = config.packages.particles.development;
+                    proj = config.packages.mandelbulb.development;
                   in
                   ''
                     sed  -e '1s/^/[\n/' -e '$s/,$/\n]/' \
@@ -105,7 +112,7 @@
             );
           };
 
-          packages.default = config.packages.particles;
+          packages.default = config.packages.mandelbulb;
         };
     };
 
