@@ -48,11 +48,6 @@ Renderer::buildShaders()
 {
     NS::Error* error = nullptr;
 
-    static constexpr char SHADER_SRC[] = {
-#embed "Shader.metal"
-        , '\0'
-    };
-
     MTL::Library* mtl_lib = this->device->newLibrary(nsStringUtf8(SHADER_SRC), nullptr, &error);
     if (!mtl_lib) {
         return std::unexpected(RendererError(
@@ -94,24 +89,12 @@ Renderer::buildShaders()
 
 void Renderer::buildBuffers()
 {
-    VertexData vertices[] = {
-        // First triangle
-        { { -1.0f, -1.0f, 0.0f }, { 0.0f, 0.0f } }, // bottom left
-        { { 1.0f, -1.0f, 0.0f }, { 1.0f, 0.0f } }, // bottom right
-        { { -1.0f, 1.0f, 0.0f }, { 0.0f, 1.0f } }, // top left
-
-        // Second triangle
-        { { 1.0f, -1.0f, 0.0f }, { 1.0f, 0.0f } }, // bottom right
-        { { 1.0f, 1.0f, 0.0f }, { 1.0f, 1.0f } }, // top right
-        { { -1.0f, 1.0f, 0.0f }, { 0.0f, 1.0f } } // top left
-    };
-
-    const usize vertex_data_size = sizeof(vertices);
+    const usize vertex_data_size = sizeof(this->vertices);
     this->vertex_data_buffer = this->device->newBuffer(
         vertex_data_size,
         MTL::ResourceStorageModeManaged);
 
-    memcpy(this->vertex_data_buffer->contents(), vertices, vertex_data_size);
+    memcpy(this->vertex_data_buffer->contents(), this->vertices, vertex_data_size);
     this->vertex_data_buffer->didModifyRange(NS::Range::Make(0, vertex_data_size));
 
     // Create uniform buffers for each frame

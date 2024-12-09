@@ -103,7 +103,7 @@
                   in
                   ''
                     sed  -e '1s/^/[\n/' -e '$s/,$/\n]/' \
-                         -e "s|/private/tmp/nix-build-${proj.name}.drv-0|$(pwd)|g" \
+                         -e "s|/private/tmp/nix-build-${proj.name}.drv-0\(/source\)\?|$(pwd)|g" \
                          -e "s|prebuilt-module-path=pcms|prebuilt-module-path=${proj}/pcms|g" \
                          ${proj}/fragments/*.o.json \
                          > compile_commands.json

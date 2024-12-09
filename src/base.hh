@@ -20,7 +20,3 @@ constexpr inline NS::String* nsStringUtf8(const char* str)
 {
     return NS::String::string(str, NS::StringEncoding::UTF8StringEncoding);
 }
-
-constexpr inline const char* nsErrorReason(NS::Error* error) {
-    return error->localizedDescription()->utf8String();
-}

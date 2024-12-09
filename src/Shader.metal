@@ -21,8 +21,9 @@ struct Uniforms {
 };
 
 vertex VertexOut vertexMain(uint vertex_id [[vertex_id]],
-                          constant VertexIn* vertices [[buffer(0)]],
-                          constant Uniforms& uniforms [[buffer(1)]]) {
+    constant VertexIn* vertices [[buffer(0)]],
+    constant Uniforms& uniforms [[buffer(1)]])
+{
     VertexOut out;
 
     out.position = float4(vertices[vertex_id].position, 1.0);
@@ -31,17 +32,19 @@ vertex VertexOut vertexMain(uint vertex_id [[vertex_id]],
     return out;
 }
 
-float mandelBulbDE(float3 pos, float3 c) {
+float mandelBulbDE(float3 pos, float3 c)
+{
     float3 z = pos;
     float dr = 1.0;
     float r = 0.0;
 
-    for(int i = 0; i < 15; i++) {
+    for (int i = 0; i < 15; i++) {
         r = length(z);
-        if(r > 2.0) break;
+        if (r > 2.0)
+            break;
 
         // Convert to polar coordinates
-        float theta = acos(z.z/r);
+        float theta = acos(z.z / r);
         float phi = atan2(z.y, z.x);
         dr = pow(r, 7.0) * 8.0 * dr + 1.0;
 
@@ -51,18 +54,15 @@ float mandelBulbDE(float3 pos, float3 c) {
         phi = phi * 8.0;
 
         // Convert back to cartesian coordinates
-        z = zr * float3(
-            sin(theta) * cos(phi),
-            sin(phi) * sin(theta),
-            cos(theta)
-        );
+        z = zr * float3(sin(theta) * cos(phi), sin(phi) * sin(theta), cos(theta));
         z += c; // Julia set variation
     }
 
     return 0.5 * log(r) * r / dr;
 }
 
-float3 getRayDirection(float2 uv, float3 ro, float3 ta, float3 up) {
+float3 getRayDirection(float2 uv, float3 ro, float3 ta, float3 up)
+{
     float3 forward = normalize(ta - ro);
     float3 right = normalize(cross(forward, up));
 
@@ -70,9 +70,11 @@ float3 getRayDirection(float2 uv, float3 ro, float3 ta, float3 up) {
 
     return normalize(forward + right * uv.x + up * uv.y);
 }
+
 fragment float4 fragmentMain(VertexOut in [[stage_in]],
-                           constant Uniforms& uniforms [[buffer(0)]]) {
-    float2 uv = (in.texcoord * 2.0 - 1.0) * float2(uniforms.resolution.x/uniforms.resolution.y, 1.0);
+    constant Uniforms& uniforms [[buffer(0)]])
+{
+    float2 uv = (in.texcoord * 2.0 - 1.0) * float2(uniforms.resolution.x / uniforms.resolution.y, 1.0);
 
     // Camera setup
     float time = uniforms.time;
@@ -90,28 +92,28 @@ fragment float4 fragmentMain(VertexOut in [[stage_in]],
     float3 pos;
     bool hit = false;
 
-    for(int i = 0; i < 100; i++) {
+    for (int i = 0; i < 100; i++) {
         pos = ro + rd * t;
         float d = mandelBulbDE(pos, c);
 
-        if(d < 0.001) {
+        if (d < 0.001) {
             hit = true;
             break;
         }
 
         t += d;
-        if(t > 20.0) break;
+        if (t > 20.0)
+            break;
     }
 
     // Pure black background
     float3 color = float3(0.0);
 
-    if(hit) {
+    if (hit) {
         float3 normal = normalize(float3(
             mandelBulbDE(pos + float3(0.001, 0.0, 0.0), c) - mandelBulbDE(pos - float3(0.001, 0.0, 0.0), c),
             mandelBulbDE(pos + float3(0.0, 0.001, 0.0), c) - mandelBulbDE(pos - float3(0.0, 0.001, 0.0), c),
-            mandelBulbDE(pos + float3(0.0, 0.0, 0.001), c) - mandelBulbDE(pos - float3(0.0, 0.0, 0.001), c)
-        ));
+            mandelBulbDE(pos + float3(0.0, 0.0, 0.001), c) - mandelBulbDE(pos - float3(0.0, 0.0, 0.001), c)));
 
         // Create multiple color components
         float3 color1 = 0.5 + 0.5 * cos(float3(0.0, 0.2, 0.4) + length(pos) * 0.3 + time);
@@ -122,8 +124,7 @@ fragment float4 fragmentMain(VertexOut in [[stage_in]],
         float3 baseColor = mix(
             mix(color1, color2, normal.y * 0.5 + 0.5),
             color3,
-            normal.z * 0.5 + 0.5
-        );
+            normal.z * 0.5 + 0.5);
 
         // Enhance color separation
         baseColor *= 1.2; // Boost intensity slightly

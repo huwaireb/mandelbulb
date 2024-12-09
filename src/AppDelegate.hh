@@ -10,9 +10,10 @@
 
 import std;
 
+/// A delegate for the main application, manages window initialization and lifecycle
 class AppDelegate : public NS::ApplicationDelegate {
     NS::Window* window;
-    NS::String* window_title = nsStringUtf8("Unset Title");
+    NS::String* window_title;
 
     MTK::View* mtk_view;
     MTL::Device* device;
@@ -21,13 +22,15 @@ class AppDelegate : public NS::ApplicationDelegate {
 public:
     AppDelegate();
     AppDelegate(const char* title);
+
     ~AppDelegate();
 
     virtual void
     applicationWillFinishLaunching(NS::Notification* pNotification) override;
+
     virtual void
     applicationDidFinishLaunching(NS::Notification* pNotification) override;
 
-    virtual bool applicationShouldTerminateAfterLastWindowClosed(
-        NS::Application* pSender) override;
+    virtual bool
+    applicationShouldTerminateAfterLastWindowClosed(NS::Application* pSender) override;
 };

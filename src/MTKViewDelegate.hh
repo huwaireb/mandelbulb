@@ -3,6 +3,7 @@
 #include "Renderer.hh"
 #include <MetalKit/MetalKit.hpp>
 
+// Methods for responding to a MetalKit view’s drawing and resizing events.
 class MTKViewDelegate : public MTK::ViewDelegate {
     std::unique_ptr<Renderer> renderer;
 
@@ -14,6 +15,5 @@ public:
     virtual void drawInMTKView(MTK::View* view) override;
 
 private:
-    explicit MTKViewDelegate(std::unique_ptr<Renderer> r)
-        : renderer(std::move(r)) {}
+    explicit MTKViewDelegate(std::unique_ptr<Renderer> r);
 };

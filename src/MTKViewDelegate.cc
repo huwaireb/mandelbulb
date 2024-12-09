@@ -1,5 +1,10 @@
 #include "MTKViewDelegate.hh"
 
+MTKViewDelegate::MTKViewDelegate(std::unique_ptr<Renderer> r)
+    : renderer(std::move(r))
+{
+}
+
 std::expected<std::unique_ptr<MTKViewDelegate>, RendererError>
 MTKViewDelegate::init(MTL::Device* device)
 {

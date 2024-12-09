@@ -1,5 +1,8 @@
 #include "AppDelegate.hh"
 
+AppDelegate::AppDelegate()
+    : window_title(nsStringUtf8("App")) { };
+
 AppDelegate::AppDelegate(const char* title)
     : window_title(nsStringUtf8(title)) { };
 
