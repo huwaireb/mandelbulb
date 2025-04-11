@@ -1,7 +1,11 @@
-# CCLS
-compile_commands.json
+# Environment cache directory for direnv
+/.direnv/
+
+# Build cache directory for ccls
 .ccls-cache/
 
-# Nix 
-/.direnv
+# Nix's default symlink output directory for nix(-)build's
 result
+
+# Compilation database for LSP support
+compile_commands.json

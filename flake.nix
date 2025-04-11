@@ -1,99 +1,34 @@
 {
-  description = "Mandelbulbs in Metals in Pure C++23";
+  description = ''
+    huwaireb/mandelbulb: A Mandelbulb rendered using Apple's Metal Graphics API (C++23). Built with Nix (SP)
+  '';
 
   outputs =
-    inputs@{ flake-parts, ... }:
-    flake-parts.lib.mkFlake { inherit inputs; } {
+    inputs:
+    inputs.parts.lib.mkFlake { inherit inputs; } {
       systems = [
         "aarch64-darwin"
         "x86_64-darwin"
       ];
       perSystem =
-        {
-          lib,
-          pkgs,
-          config,
-          ...
-        }:
+        { pkgs, config, ... }:
         let
-          llvm = pkgs.llvmPackages_19;
-          stdenv = llvm.stdenv;
-          fs = lib.fileset;
+          llvmPackages = pkgs.llvmPackages_19;
+          inherit (llvmPackages) stdenv;
         in
         {
-          packages.mandelbulb = stdenv.mkDerivation {
-            pname = "mandelbulb";
-            version = "0.1.0";
-            src = fs.toSource {
-              root = ./.;
-              fileset = fs.unions [
-                ./include
-                ./src
-              ];
-            };
-
-            outputs = [
-              "out"
-              "development"
-            ];
-
-            buildInputs = [
-              pkgs.apple-sdk_15
-              llvm.libcxx
-
-              (pkgs.darwinMinVersionHook "12.0")
-            ];
-
-            FLAGS = [
-              "--start-no-unused-arguments"
-              "-std=c++23"
-              "-stdlib=libc++"
-              "-fstrict-enums"
-              "-fsanitize=undefined"
-              "-fsanitize=address"
-              "-fcoroutines"
-              "-flto"
-              "-fno-exceptions"
-              "-fno-rtti"
-              "-fno-threadsafe-statics"
-              "-fno-operator-names"
-              "-fno-common"
-              "-fvisibility=hidden"
-              "-Wall"
-              "-Wconversion"
-            ];
-
-            preBuild = ''
-              mkdir -p pcms
-              $CXX  -Wno-reserved-identifier -Wno-reserved-module-identifier --precompile \
-                    -o pcms/std.pcm ${llvm.libcxx}/share/libc++/v1/std.cppm $FLAGS
-            '';
-
-            buildPhase = ''
-              runHook preBuild
-              $CXX src/main.cc src/AppDelegate.cc src/MTKViewDelegate.cc src/Renderer.cc \
-                   -o mandelbulb -fprebuilt-module-path=pcms -Iinclude -lobjc -framework MetalKit \
-                   -framework AppKit -framework Metal -framework QuartzCore -framework Foundation \
-                   -MJ mandelbulb.o.json $FLAGS
-            '';
-
-            installPhase = ''
-              install -D -t $out/bin mandelbulb
-              install -D -t $development/pcms pcms/*
-              install -D -t $development/fragments *.o.json
-            '';
-
-            meta.mainProgram = "mandelbulb";
+          packages.mandelbulb = pkgs.callPackage ./package.nix {
+            inherit llvmPackages stdenv;
           };
 
           devShells.default = pkgs.mkShell.override { inherit stdenv; } {
-            packages = [ (pkgs.ccls.override { llvmPackages = llvm; }) ];
+            packages = [ (pkgs.ccls.override { inherit llvmPackages; }) ];
             inputsFrom = [ config.packages.mandelbulb ];
           };
 
           apps.ccdb = {
             type = "app";
-            program = lib.getExe (
+            program = pkgs.lib.getExe (
               pkgs.writeShellApplication {
                 name = "ccdb";
                 runtimeInputs = [ pkgs.gnused ];
@@ -117,7 +52,10 @@
     };
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    flake-parts.url = "github:hercules-ci/flake-parts";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    parts = {
+      url = "github:hercules-ci/flake-parts";
+      inputs.nixpkgs-lib.follows = "nixpkgs";
+    };
   };
 }
